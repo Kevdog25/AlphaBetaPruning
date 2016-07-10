@@ -1,0 +1,6 @@
+c:\users\kevin\documents\visual studio 2015\Projects\AlphaBetaPruning\AlphaBetaPruning\bin\Debug\AlphaBetaPruning.exe.config
+C:\Users\Kevin\documents\visual studio 2015\Projects\AlphaBetaPruning\AlphaBetaPruning\bin\Debug\AlphaBetaPruning.exe
+C:\Users\Kevin\documents\visual studio 2015\Projects\AlphaBetaPruning\AlphaBetaPruning\bin\Debug\AlphaBetaPruning.pdb
+C:\Users\Kevin\documents\visual studio 2015\Projects\AlphaBetaPruning\AlphaBetaPruning\obj\Debug\AlphaBetaPruning.csprojResolveAssemblyReference.cache
+C:\Users\Kevin\documents\visual studio 2015\Projects\AlphaBetaPruning\AlphaBetaPruning\obj\Debug\AlphaBetaPruning.exe
+C:\Users\Kevin\documents\visual studio 2015\Projects\AlphaBetaPruning\AlphaBetaPruning\obj\Debug\AlphaBetaPruning.pdb
