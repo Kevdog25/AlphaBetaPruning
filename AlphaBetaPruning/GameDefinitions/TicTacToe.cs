@@ -100,6 +100,11 @@ namespace AlphaBetaPruning
 
                 return true;
             }
+
+            public void PrettyPrintToConsole()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class TicTacToeAction : Action
@@ -107,6 +112,11 @@ namespace AlphaBetaPruning
             public TicTacToeAction(GameAction act) : base(act)
             {
 
+            }
+
+            public override int CompareTo(Action obj)
+            {
+                throw new NotImplementedException();
             }
 
             public override bool Equals(Action other)

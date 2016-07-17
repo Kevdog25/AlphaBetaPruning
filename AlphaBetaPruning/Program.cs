@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using AlphaBetaPruning.AILearner;
 namespace AlphaBetaPruning
 {
     class Program
@@ -60,7 +61,7 @@ namespace AlphaBetaPruning
             //PlayTTT(new TicTacToe(),true);
             //PlayGomoku(new Gomoku(),false);
 
-            Game game = new TicTacToe();
+            Game game = new Connect4();
             MCUTC mcAI = new MCUTC(game);
             Minimax mmAI = new Minimax(game);
             IGameState state = game.NewGame();
@@ -70,20 +71,22 @@ namespace AlphaBetaPruning
             //StreamWriter fout = new StreamWriter("C:\\Users\\Kevin\\Desktop\\MCUTCTree.xml");
             //mcAI.DumpTree(fout);
             //fout.Close();
-
-            bool mmToPlay = true;
+            string connect4FP = "Connect4DB.txt";
+            mmAI.SetLearner(new Connect4DecisionTree());
+            bool prettyPrint = false;
             while (!game.TerminalStateCheck(state))
             {
-                Action act = mmToPlay ? mmAI.FindBestMove(state, 1) : mmAI.FindBestMove(state,1);
-                mmToPlay = !mmToPlay;
+                Action act = mmAI.FindBestMove(state, 6);
                 state = act.Act(state);
                 Console.WriteLine(state.ToString());
-                Console.ReadLine();
+
+                state = game.MakeMove(state, Console.ReadLine());
+
+                if (prettyPrint)
+                    state.PrettyPrintToConsole();
+                else
+                    Console.WriteLine(state.ToString());
             }
-            if (mmToPlay)
-                Console.WriteLine("Winner: MonteCarlo!");
-            else
-                Console.WriteLine("Winner: Minimax!");
 
         }
     }
