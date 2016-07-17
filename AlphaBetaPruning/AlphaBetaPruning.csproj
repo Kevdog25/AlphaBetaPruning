@@ -44,20 +44,32 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Action.cs" />
-    <Compile Include="Checkers.cs" />
-    <Compile Include="Game.cs" />
-    <Compile Include="GameSpecificationException.cs" />
-    <Compile Include="Gomoku.cs" />
-    <Compile Include="IGameState.cs" />
-    <Compile Include="MCUTC.cs" />
-    <Compile Include="Minimax.cs" />
+    <Compile Include="AILearner\Connect4DecisionTree.cs" />
+    <Compile Include="AILearner\DecisionTree.cs" />
+    <Compile Include="AILearner\DTActionClass.cs" />
+    <Compile Include="AILearner\ILearner.cs" />
+    <Compile Include="AILearner\IActionClass.cs" />
+    <Compile Include="GameDefinitions\Checkers.cs" />
+    <Compile Include="GameDefinitions\Connect4.cs" />
+    <Compile Include="AILearner\Connect4DB.cs" />
+    <Compile Include="ConsoleConfig.cs" />
+    <Compile Include="GameDefinitions\Game.cs" />
+    <Compile Include="GameDefinitions\GameSpecificationException.cs" />
+    <Compile Include="GameDefinitions\Gomoku.cs" />
+    <Compile Include="GameDefinitions\IGameState.cs" />
+    <Compile Include="AIDriver\MCUTC.cs" />
+    <Compile Include="AIDriver\Minimax.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TicTacToe.cs" />
+    <Compile Include="AILearner\StateDB.cs" />
+    <Compile Include="GameDefinitions\TicTacToe.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Data\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

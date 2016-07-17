@@ -209,6 +209,11 @@ namespace AlphaBetaPruning
             {
                 return player.ToString();
             }
+
+            public void PrettyPrintToConsole()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class CheckersAction : Action
@@ -216,6 +221,11 @@ namespace AlphaBetaPruning
             public CheckersAction(GameAction act) : base(act)
             {
 
+            }
+
+            public override int CompareTo(Action obj)
+            {
+                throw new NotImplementedException();
             }
 
             public override bool Equals(Action other)

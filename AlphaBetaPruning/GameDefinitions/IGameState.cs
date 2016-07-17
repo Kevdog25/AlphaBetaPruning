@@ -8,5 +8,7 @@ namespace AlphaBetaPruning
         bool Equals(IGameState other);
 
         string GetCurrentPlayer();
+
+        void PrettyPrintToConsole();
     }
 }

@@ -3,7 +3,7 @@
 namespace AlphaBetaPruning
 {
     [Serializable]
-    abstract class Action
+    abstract class Action: IComparable<Action>
     {
         [Serializable]
         public delegate IGameState GameAction(IGameState state);
@@ -28,5 +28,7 @@ namespace AlphaBetaPruning
         }
 
         public abstract bool Equals(Action other);
+
+        public abstract int CompareTo(Action obj);
     }
 }
