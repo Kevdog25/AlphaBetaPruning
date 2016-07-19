@@ -10,6 +10,5 @@ namespace AlphaBetaPruning.AILearner
     {
         bool IsMember(Action act);
         void Reorder(List<Action> actions);
-        
     }
 }

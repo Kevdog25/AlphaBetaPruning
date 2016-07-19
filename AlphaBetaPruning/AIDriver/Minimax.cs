@@ -7,16 +7,17 @@ namespace AlphaBetaPruning
     class Minimax
     {
         private Game game;
-        private ILearner learner;
-        private bool useDB = false;
+        private ILearner Learner;
+        private bool LearningMode;
         public Minimax(Game inGame)
         {
             game = inGame;
         }
 
-        public void SetLearner(ILearner learner)
+        public void SetLearner(ILearner learner, bool learningMode = true)
         {
-            this.learner = learner;
+            Learner = learner;
+            LearningMode = learningMode;
         }
 
         /// <summary>
@@ -46,7 +47,8 @@ namespace AlphaBetaPruning
                 }
             }
 
-            learner.ResolveBuffer();
+            //if(learner != null)
+            //    learner.ResolveBuffer();
 
             return bestActions[Utils.RandInt(0,bestActions.Count)];
         }
@@ -74,9 +76,13 @@ namespace AlphaBetaPruning
             }
             
             Action prunedAction = null;
-            IActionClass suggestion = learner.GetSuggestion(state);
-            if(suggestion != null)
-                suggestion.Reorder(actions);
+            IActionClass suggestion = null;
+            if (Learner != null)
+            { 
+                suggestion = Learner.GetSuggestion(state);
+                if (suggestion != null)
+                    suggestion.Reorder(actions);
+            }
 
             float e;
             if (maxToPlay)
@@ -112,8 +118,11 @@ namespace AlphaBetaPruning
                 }
             }
 
-            if (prunedAction != null)
-                learner.BufferLearn(state, prunedAction);
+            if (LearningMode && prunedAction != null)
+            {
+                if (suggestion == null || !suggestion.IsMember(prunedAction))
+                    Learner.BufferLearn(state, prunedAction);
+            }
 
             return e;
         }
