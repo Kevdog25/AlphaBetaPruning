@@ -8,8 +8,10 @@ namespace AlphaBetaPruning
 {
     class Connect4 : Game
     {
-        public enum Player { Red=1, Black=2}
+        public enum Player { Red=1, Black=2 }
+        List<int[]> directions = new List<int[]>();
 
+        #region Classes
         public class Connect4State : IGameState
         {
             public int[,] board = new int[7, 7];
@@ -120,7 +122,6 @@ namespace AlphaBetaPruning
                 Console.ForegroundColor = oldFor;
             }
         }
-
         public class Connect4Action : Action
         {
             public Player MovingPlayer { get; private set; }
@@ -154,9 +155,24 @@ namespace AlphaBetaPruning
                     throw new GameSpecificationException(string.Format("Cannot cast action {0} to Connect4Action", other.GetType()));
                 return a;
             }
-        }
 
-        List<int[]> directions = new List<int[]>();
+            public override bool Equals(object obj)
+            {
+                return Equals(obj as Action);
+            }
+
+            public override int GetHashCode()
+            {
+                return MovingPlayer.GetHashCode() + Column.GetHashCode();
+            }
+
+            public override string ToString()
+            {
+                return Column + "," + MovingPlayer;
+            }
+        }
+        #endregion
+
 
         public Connect4()
         {
@@ -246,8 +262,11 @@ namespace AlphaBetaPruning
         public override bool TerminalStateCheck(IGameState inState)
         {
             Connect4State state = tryCastGameState(inState);
+            bool fullBoard = true;
             for(int i = 0; i < 7; i++)
             {
+                if (state.board[i, 0] != 6)
+                    fullBoard = false;
                 for (int j = 1; j < 6; j++)
                 {
                     int p = state.board[i, j];
@@ -275,7 +294,7 @@ namespace AlphaBetaPruning
                     }
                 }
             }
-            return false;
+            return fullBoard;
         }
 
         private bool isInRange(int x, int l, int r)

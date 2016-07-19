@@ -44,5 +44,19 @@ namespace AlphaBetaPruning.AILearner
                 }
             }
         }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("(");
+            foreach(Action a in ValidActions)
+            {
+                sb.Append(a.ToString());
+                sb.Append(";");
+            }
+            sb.Append(")");
+
+            return sb.ToString();
+        }
     }
 }
