@@ -228,7 +228,17 @@ namespace AlphaBetaPruning
                 throw new NotImplementedException();
             }
 
+            public override bool Equals(object obj)
+            {
+                throw new NotImplementedException();
+            }
+
             public override bool Equals(Action other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override int GetHashCode()
             {
                 throw new NotImplementedException();
             }

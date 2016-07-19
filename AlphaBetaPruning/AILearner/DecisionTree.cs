@@ -13,15 +13,13 @@ namespace AlphaBetaPruning.AILearner
         protected delegate bool Question(StateResponse s);
 
         private Node Root;
-        private List<IGameState> StateBuffer;
-        private List<Action> ActionBuffer;
+        private List<StateResponse> Buffer;
         private List<StateResponse> Knowledge;
-        private List<HashSet<int>> PossibleValues;
         private readonly float log2 = (float)(Math.Log(2));
         #endregion
 
         #region Classes
-        protected class StateResponse
+        protected class StateResponse: IEquatable<StateResponse>
         {
             public int Dimensions { get; protected set; }
             public Action Response { get; set; }
@@ -47,6 +45,21 @@ namespace AlphaBetaPruning.AILearner
                     values[i] = value;
                 }
             }
+
+            public override bool Equals(object obj)
+            {
+                return Equals(obj as StateResponse);
+            }
+
+            public bool Equals(StateResponse other)
+            {
+                return (values.Equals(other.values)) && (Response.Equals(other.Response));
+            }
+
+            public override int GetHashCode()
+            {
+                return Response.GetHashCode() + values.GetHashCode();
+            }
         }
 
         private class Node
@@ -55,8 +68,9 @@ namespace AlphaBetaPruning.AILearner
             public Node TrueNode { get; private set; }
             public Node FalseNode { get; private set; }
             public IActionClass Classification { get; private set; }
-
-            private List<int> TraceData;
+            
+            private const string indent = "\t";
+            private int[] TraceData;
 
             public Node(IActionClass c)
             {
@@ -73,9 +87,40 @@ namespace AlphaBetaPruning.AILearner
                 FalseNode = nFalse;
             }
 
-            public void SetTraceData(List<int> td)
+            public void SetTraceData(int[] td)
             {
                 TraceData = td;
+            }
+
+            public string ToXML(int level = 0,string prepend = "")
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append(prepend);
+                for (int i = 0; i < level; i++)
+                    sb.Append(indent);
+                sb.Append("<node");
+                if (Classification == null)
+                {
+                    sb.Append(" value=\"(");
+                    for(var i = 0; i < TraceData.Length-1; i++)
+                    {
+                        sb.Append(TraceData[i] + ",");
+                    }
+                    sb.Append(TraceData[TraceData.Length - 1] + ")\" >\n");
+                    sb.Append(TrueNode.ToXML(level + 1));
+                    sb.Append(FalseNode.ToXML(level + 1));
+                }
+                else
+                {
+                    sb.Append(">");
+                    sb.Append(Classification.ToString());
+                }
+
+                for (int i = 0; i < level; i++)
+                    sb.Append(indent);
+                sb.Append("</node>\n");
+
+                return sb.ToString();
             }
         }
         #endregion
@@ -83,10 +128,8 @@ namespace AlphaBetaPruning.AILearner
         #region Constructors
         public DecisionTree()
         {
-            StateBuffer = new List<IGameState>();
-            ActionBuffer = new List<Action>();
+            Buffer = new List<StateResponse>();
             Knowledge = new List<StateResponse>();
-            PossibleValues = new List<HashSet<int>>();
         }
         #endregion
 
@@ -132,35 +175,57 @@ namespace AlphaBetaPruning.AILearner
         /// <param name="act">Action associated with the corrosponding state</param>
         public void BufferLearn(IGameState state, Action act)
         {
-            StateBuffer.Add(state);
-            ActionBuffer.Add(act);
+            StateResponse sr = Convert(state, act);
+            if (!Buffer.Contains(sr))
+                Buffer.Add(sr);
         }
 
+        /// <summary>
+        /// This assimilates the knowledge added with BufferLearn to the decision tree model.
+        /// </summary>
         public virtual void ResolveBuffer()
         {
-            for(var i = 0; i < StateBuffer.Count; i++)
-                Knowledge.Add(Convert(StateBuffer[i], ActionBuffer[i]));
-
+            for (var i = 0; i < Buffer.Count; i++)
+            {
+                if(!Knowledge.Contains(Buffer[i]))
+                    Knowledge.Add(Buffer[i]);
+            }
             Root = null;
+            Buffer.Clear();
             GC.Collect();
             BuildTree();
         }
 
+        /// <summary>
+        /// Initiates the tree building process from scratch. This can be a large cost depending on
+        /// the knowledge base.
+        /// </summary>
         public void BuildTree()
         {
             if (Knowledge.Count == 0)
                 return;
             int dimensions = Knowledge[0].Dimensions;
-            PossibleValues.Clear();
+            List<HashSet<int>> possibleValues = new List<HashSet<int>>();
             for(var i = 0; i < dimensions; i++)
             {
                 HashSet<int> set = new HashSet<int>();
                 for(var j = 0; j < Knowledge.Count; j++)
                     if (!set.Contains(Knowledge[j][i]))
                         set.Add(Knowledge[j][i]);
-                PossibleValues.Add(set);
+                possibleValues.Add(set);
             }
-            Root = BuildNode(Knowledge, Entropy(Knowledge));
+            Root = BuildNode(Knowledge, Entropy(Knowledge),possibleValues);
+        }
+
+        /// <summary>
+        /// Converts the node structure into a well formatted XML string for human reading.
+        /// </summary>
+        /// <returns>String of XML</returns>
+        public string ToXML()
+        {
+            if (Root == null)
+                return "";
+            return Root.ToXML();
         }
 
         /// <summary>
@@ -172,8 +237,9 @@ namespace AlphaBetaPruning.AILearner
         {
             if (!File.Exists(fp))
             {
-                File.Create(fp);
+                File.Create(fp).Close();
             }
+
             using (StreamReader f = new StreamReader(fp))
             {
                 Knowledge.Clear();
@@ -183,6 +249,7 @@ namespace AlphaBetaPruning.AILearner
                     line = f.ReadLine();
                     Knowledge.Add(DeserializeItem(line));
                 }
+                f.Close();
             }
         }
 
@@ -197,7 +264,7 @@ namespace AlphaBetaPruning.AILearner
             {
                 for (var i = 0; i < Knowledge.Count; i++)
                 {
-                    f.WriteLine(SerializeItem(Knowledge[i]));
+                    f.Write(SerializeItem(Knowledge[i]));
                 }
             }
         }
@@ -208,7 +275,7 @@ namespace AlphaBetaPruning.AILearner
         protected abstract StateResponse Convert(IGameState state,Action response = null);
         protected abstract StateResponse DeserializeItem(string item);
         protected abstract string SerializeItem(StateResponse item);
-        protected virtual List<int> AddTraceData(Action act) { return null; }
+        protected virtual int[] AddTraceData(params int[] args) { return args; }
         #endregion
 
         #region Private Methods
@@ -217,22 +284,24 @@ namespace AlphaBetaPruning.AILearner
             Dictionary<Action, float> dist = GetClassDist(states);
 
             float s = 0;
-            foreach(int v in dist.Values)
+            foreach(float v in dist.Values)
                 s -= (float)Math.Log(v) * v;
 
             return s;
         }
 
-        private Node BuildNode(List<StateResponse> states, float s)
+        private Node BuildNode(List<StateResponse> states, float s, List<HashSet<int>> possibleValues)
         {
+            List<HashSet<int>> localPossibles = new List<HashSet<int>>(possibleValues);
+
             float bestGain = 0, gain, p;
-            Question bestQ = null;
             List<StateResponse> bestF = null;
             List<StateResponse> bestT = null;
+            int bestV = 0, bestD = 0;
             int nStates = states.Count;
             for(var i = 0; i < states[0].Dimensions; i++)
             {
-                foreach(int v in PossibleValues[i])
+                foreach(int v in localPossibles[i])
                 {
                     List<StateResponse> f = new List<StateResponse>();
                     List<StateResponse> t = new List<StateResponse>();
@@ -246,31 +315,38 @@ namespace AlphaBetaPruning.AILearner
                     }
 
                     p = (float)(t.Count) / nStates;
-                    gain = s - p*Entropy(t) - (1-p)*Entropy(f);
+                    // This uses the definition of relative gain that weights 
+                    // gain from choosing a particular value by the number of values that there are to split on.
+                    gain = (s - p * Entropy(t) - (1 - p) * Entropy(f)) / localPossibles[i].Count;
 
                     if(gain > bestGain && t.Count > 0 && f.Count > 0)
                     {
                         bestGain = gain;
                         bestT = t;
                         bestF = f;
-                        int value = v;
-                        int d = i;
-                        bestQ = x => {
-                            return x[d] == v;
-                        };
+                        bestV = v;
+                        bestD = i;
                     }
                 }
             }
             s -= bestGain;
             Node n;
             if (bestGain > 0)
-                n = new Node(bestQ, BuildNode(bestT, s), BuildNode(bestF, s));
+            {
+                bestGain *= localPossibles[bestD].Count; // Here it is converted back into absolute gain for passing onto the next stages
+                localPossibles[bestD].Remove(bestV);
+                n = new Node(x => { return x[bestD] == bestV; },
+                    BuildNode(bestT, s - bestGain, localPossibles),
+                    BuildNode(bestF, s - bestGain, localPossibles));
+                n.SetTraceData(AddTraceData(bestD, bestV));
+            }
             else
             {
                 Dictionary<Action, float> dist = GetClassDist(states);
                 n = new Node(GenerateClassification(dist));
+                n.SetTraceData(AddTraceData(0));
             }
-
+            
             return n;
         }
 
@@ -296,7 +372,8 @@ namespace AlphaBetaPruning.AILearner
             List<Action> keys = count.Keys.ToList();
             for(var i = 0; i < keys.Count; i++)
             {
-                count[keys[i]] /= total;
+                float v = count[keys[i]];
+                count[keys[i]] = v/total;
             }
 
             return count;
