@@ -127,6 +127,11 @@ namespace AlphaBetaPruning
 
                 return true;
             }
+
+            public void PrettyPrintToConsole()
+            {
+                throw new NotImplementedException();
+            }
         }
         
         private class GomokuAction : Action
@@ -136,7 +141,22 @@ namespace AlphaBetaPruning
 
             }
 
+            public override int CompareTo(Action obj)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override bool Equals(object obj)
+            {
+                throw new NotImplementedException();
+            }
+
             public override bool Equals(Action other)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override int GetHashCode()
             {
                 throw new NotImplementedException();
             }

@@ -3,7 +3,7 @@
 namespace AlphaBetaPruning
 {
     [Serializable]
-    abstract class Action
+    abstract class Action: IComparable<Action>, IEquatable<Action>
     {
         [Serializable]
         public delegate IGameState GameAction(IGameState state);
@@ -26,6 +26,11 @@ namespace AlphaBetaPruning
                 throw new GameSpecificationException("Cannot act on " + state.GetType().ToString(),ex);
             }
         }
+
+        public abstract int CompareTo(Action obj);
+
+        public abstract override bool Equals(object obj);
+        public abstract override int GetHashCode();
 
         public abstract bool Equals(Action other);
     }
