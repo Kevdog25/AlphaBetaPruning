@@ -1,14 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using AlphaBetaPruning.AILearner;
 
 namespace AlphaBetaPruning
 {
     class Minimax
     {
         private Game game;
+        private ILearner Learner;
+        private bool LearningMode;
         public Minimax(Game inGame)
         {
             game = inGame;
+        }
+
+        public void SetLearner(ILearner learner, bool learningMode = true)
+        {
+            Learner = learner;
+            LearningMode = learningMode;
         }
 
         /// <summary>
@@ -28,7 +37,7 @@ namespace AlphaBetaPruning
                 float e = Evaluate(s, a, b, false,depth);
                 if (e > a)
                 {
-                    bestActions = new List<Action>();
+                    bestActions.Clear();
                     bestActions.Add(act);
                     a = e;
                 }
@@ -37,6 +46,10 @@ namespace AlphaBetaPruning
                     bestActions.Add(act);
                 }
             }
+
+            //if(learner != null)
+            //    learner.ResolveBuffer();
+
             return bestActions[Utils.RandInt(0,bestActions.Count)];
         }
 
@@ -62,30 +75,56 @@ namespace AlphaBetaPruning
                 throw new GameSpecificationException("State has no available actions, but was not caught as terminal.");
             }
             
+            Action prunedAction = null;
+            IActionClass suggestion = null;
+            if (Learner != null)
+            { 
+                suggestion = Learner.GetSuggestion(state);
+                if (suggestion != null)
+                    suggestion.Reorder(actions);
+            }
+
+            float e;
             if (maxToPlay)
             {
-                float e = float.NegativeInfinity;
+                e = float.NegativeInfinity;
                 foreach(Action act in actions)
                 {
                     e = Math.Max(Evaluate(act.Act(state), a, b, !maxToPlay, depth - 1), e);
                     a = Math.Max(a, e);
+
+                    // Node Pruning
                     if (a > b)
+                    {
+                        prunedAction = act;
                         break;
+                    }
                 }
-                return e;
             }
             else
             {
-                float e = float.PositiveInfinity;
+                e = float.PositiveInfinity;
                 foreach (Action act in actions)
                 {
                     e = Math.Min(Evaluate(act.Act(state), a, b, !maxToPlay, depth - 1), e);
                     b = Math.Min(b, e);
+
+                    // Node Pruning
                     if (a > b)
+                    {
+                        prunedAction = act;
                         break;
+                    }
                 }
-                return e;
             }
+
+            if (LearningMode && prunedAction != null)
+            {
+                if (suggestion == null || !suggestion.IsMember(prunedAction))
+                    Learner.BufferLearn(state, prunedAction);
+            }
+
+            return e;
         }
     }
 }
