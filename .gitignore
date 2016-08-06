@@ -47,4 +47,4 @@ Temporary Items
 .apdisk
 
 # Data files that are potentially large
-
+.AlphaBetaPruning\Ignored\*
