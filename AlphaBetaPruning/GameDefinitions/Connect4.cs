@@ -172,8 +172,7 @@ namespace AlphaBetaPruning
             }
         }
         #endregion
-
-
+        
         public Connect4()
         {
             directions.Add(new int[] { 0, 1 });
