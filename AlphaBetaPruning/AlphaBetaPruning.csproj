@@ -44,6 +44,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Action.cs" />
+    <Compile Include="AIDriver\IDecisionDriver.cs" />
+    <Compile Include="AIDriver\Negamax.cs" />
     <Compile Include="AILearner\Connect4DecisionTree.cs" />
     <Compile Include="AILearner\DecisionTree.cs" />
     <Compile Include="AILearner\DTActionClass.cs" />

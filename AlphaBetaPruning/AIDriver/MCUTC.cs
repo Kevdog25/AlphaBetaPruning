@@ -6,14 +6,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AlphaBetaPruning
+namespace AlphaBetaPruning.AIDriver
 {
-    class MCUTC
+    class MCUTC : IDecisionDriver
     {
         private Game game;
         private Node root;
-        
-        public class MCUTCException : Exception
+        private float MaxTime;
+        private int MaxInterations;
+
+        #region Classes
+        private class MCUTCException : Exception
         {
             public MCUTCException() : base()
             {
@@ -103,14 +106,20 @@ namespace AlphaBetaPruning
                 fout.WriteLine("</node>");
             }
         }
+        #endregion
 
-        public MCUTC(Game inGame)
+        #region Constructors
+        public MCUTC(Game inGame, float maxTime = float.PositiveInfinity,
+            int maxIterations = int.MaxValue)
         {
             game = inGame;
+            MaxTime = maxTime;
+            MaxInterations = maxIterations;
         }
+        #endregion
 
-        public Action FindBestMove(IGameState state,float maxTime = float.PositiveInfinity,
-            int maxIterations = int.MaxValue)
+        #region IDecisionDriver
+        public Action FindBestMove(IGameState state)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -118,7 +127,7 @@ namespace AlphaBetaPruning
             root = new Node(state, game.AvailableActions(state));
 
             int iter = 0;
-            while (sw.ElapsedMilliseconds / 1000 < maxTime && iter < maxIterations)
+            while (sw.ElapsedMilliseconds / 1000 < MaxTime && iter < MaxInterations)
             {
                 iter++;
                 Node node = root;
@@ -179,7 +188,9 @@ namespace AlphaBetaPruning
             Console.WriteLine("Chosen State Value: " + bestV.ToString());
             return bestAct;
         }
+        #endregion
 
+        #region MCUTC Public
         public void DumpTree(StreamWriter fout)
         {
             fout.WriteLine("<xml version = \"1.0\" encoding = \"UTF-8\">");
@@ -188,5 +199,6 @@ namespace AlphaBetaPruning
             fout.WriteLine("</MCUTCTree>");
             fout.WriteLine("</xml>");
         }
+        #endregion
     }
 }
