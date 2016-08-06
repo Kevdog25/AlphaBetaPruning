@@ -70,7 +70,7 @@ namespace AlphaBetaPruning
             Game game = new Connect4();
             Minimax mmAI = new Minimax(game,4);
             Minimax nmAI = new Minimax(game,4);
-            //string connect4FP = "Connect4DB.txt";
+            //string connect4FP = "..\\..\\Ignored\\Connect4DB.txt";
             //DecisionTree decisionTree = new Connect4DecisionTree(connect4FP);
             //mmAI.SetLearner(decisionTree);
 
