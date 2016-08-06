@@ -2,57 +2,66 @@
 using System.Collections.Generic;
 using AlphaBetaPruning.AILearner;
 
-namespace AlphaBetaPruning
+namespace AlphaBetaPruning.AIDriver
 {
-    class Minimax
+    class Minimax : IDecisionDriver
     {
+        #region Private Fields
         private Game game;
         private ILearner Learner;
         private bool LearningMode;
-        public Minimax(Game inGame)
+        private int Depth;
+        #endregion
+
+        #region Constructors
+        public Minimax(Game inGame,int depth = 10)
         {
             game = inGame;
+            Depth = depth;
         }
+        #endregion
 
-        public void SetLearner(ILearner learner, bool learningMode = true)
-        {
-            Learner = learner;
-            LearningMode = learningMode;
-        }
-
+        #region IDecisionDriver
         /// <summary>
         /// Given a player to play as, finds the best move for them to pick.
         /// </summary>
         /// <param name="state"></param>
         /// <param name="player"></param>
-        public Action FindBestMove(IGameState state,int depth = 10)
+        public Action FindBestMove(IGameState state)
         {
             List<Action> actions = game.AvailableActions(state);
             float a = float.NegativeInfinity;
             float b = float.PositiveInfinity;
             List<Action> bestActions = new List<Action>();
-            foreach(Action act in actions)
+            foreach (Action act in actions)
             {
                 IGameState s = act.Act(state);
-                float e = Evaluate(s, a, b, false,depth);
+                float e = EvaluateMinimax(s, a, b, false, Depth);
                 if (e > a)
                 {
                     bestActions.Clear();
                     bestActions.Add(act);
                     a = e;
                 }
-                else if(e == a)
+                else if (e == a)
                 {
                     bestActions.Add(act);
                 }
             }
 
-            //if(learner != null)
-            //    learner.ResolveBuffer();
-
-            return bestActions[Utils.RandInt(0,bestActions.Count)];
+            return bestActions[Utils.RandInt(0, bestActions.Count)];
         }
+        #endregion
 
+        #region Minimax Public
+        public void SetLearner(ILearner learner, bool learningMode = true)
+        {
+            Learner = learner;
+            LearningMode = learningMode;
+        }
+        #endregion
+
+        #region Minimax Private
         /// <summary>
         /// Runs through an alpha-beta pruning routine to find the expected value of 
         /// the state.
@@ -63,7 +72,7 @@ namespace AlphaBetaPruning
         /// <param name="maxToPlay"></param>
         /// <param name="depth"></param>
         /// <returns></returns>
-        float Evaluate(IGameState state,float a, float b, bool maxToPlay,int depth)
+        private float EvaluateMinimax(IGameState state,float a, float b, bool maxToPlay,int depth)
         {
             if (depth == 0 || game.TerminalStateCheck(state))
             {
@@ -90,7 +99,7 @@ namespace AlphaBetaPruning
                 e = float.NegativeInfinity;
                 foreach(Action act in actions)
                 {
-                    e = Math.Max(Evaluate(act.Act(state), a, b, !maxToPlay, depth - 1), e);
+                    e = Math.Max(EvaluateMinimax(act.Act(state), a, b, !maxToPlay, depth - 1), e);
                     a = Math.Max(a, e);
 
                     // Node Pruning
@@ -106,7 +115,7 @@ namespace AlphaBetaPruning
                 e = float.PositiveInfinity;
                 foreach (Action act in actions)
                 {
-                    e = Math.Min(Evaluate(act.Act(state), a, b, !maxToPlay, depth - 1), e);
+                    e = Math.Min(EvaluateMinimax(act.Act(state), a, b, !maxToPlay, depth - 1), e);
                     b = Math.Min(b, e);
 
                     // Node Pruning
@@ -126,5 +135,6 @@ namespace AlphaBetaPruning
 
             return e;
         }
+        #endregion
     }
 }
