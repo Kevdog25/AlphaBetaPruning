@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AlphaBetaPruning.GameDefinitions;
+using Action = AlphaBetaPruning.Shared.Action;
 
 namespace AlphaBetaPruning.AILearner
 {
-    class Connect4DecisionTree : DecisionTree
+    class Connect4DecisionTree : FullDecisionTree
     {
         public Connect4DecisionTree(string fp)
         {
@@ -24,17 +26,17 @@ namespace AlphaBetaPruning.AILearner
         protected override StateResponse Convert(IGameState inState, Action response = null)
         {
             Connect4.Connect4State state = cast(inState);
-            StateResponse sr = new StateResponse(43,response);
+            StandardizedState standardState = new StandardizedState(43);
             for(var i = 0; i < 7; i++)
             {
                 for(var j = 0; j < 6; j++)
                 {
-                    sr[i * 6 + j] = state.board[i, 1 + j];
+                    standardState[i * 6 + j] = state.board[i, 1 + j];
                 }
             }
-            sr[42] = (int)state.toMove;
+            standardState[42] = (int)state.toMove;
 
-            return sr;
+            return new StateResponse(standardState, response);
         }
 
         protected override IActionClass GenerateClassification(Dictionary<Action, float> dict)
@@ -54,24 +56,25 @@ namespace AlphaBetaPruning.AILearner
                     int.Parse(response[0]), 
                     (Connect4.Player)int.Parse(response[1])
                     );
-
-            StateResponse sr = new StateResponse(values.Length, act);
-            for(var i = 0; i < sr.Dimensions; i++)
+            
+            StandardizedState state = new StandardizedState(values.Length);
+            for(var i = 0; i < state.Length; i++)
             {
-                sr[i] = int.Parse(values[i]);
+                state[i] = int.Parse(values[i]);
             }
-            return sr;
+            return new StateResponse(state,act);
         }
 
         protected override string SerializeItem(StateResponse item)
         {
             StringBuilder sb = new StringBuilder();
             Connect4.Connect4Action act = item.Response as Connect4.Connect4Action;
-            for(var i = 0; i < item.Dimensions-1; i++)
+            StandardizedState state = item.State;
+            for(var i = 0; i < state.Length-1; i++)
             {
-                sb.Append(item[i] + ",");
+                sb.Append(state[i] + ",");
             }
-            sb.Append(item[item.Dimensions - 1]);
+            sb.Append(state[state.Length - 1]);
             if(act != null)
             {
                 sb.Append(";");

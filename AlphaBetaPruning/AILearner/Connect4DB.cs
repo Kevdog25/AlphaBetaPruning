@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using AlphaBetaPruning.GameDefinitions;
+
 namespace AlphaBetaPruning
 {
     class Connect4DB : IStateDB

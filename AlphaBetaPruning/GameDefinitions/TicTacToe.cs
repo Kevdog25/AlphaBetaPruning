@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AlphaBetaPruning.Shared;
+using Action = AlphaBetaPruning.Shared.Action;
 
-namespace AlphaBetaPruning
+namespace AlphaBetaPruning.GameDefinitions
 {
     class TicTacToe : Game
     {

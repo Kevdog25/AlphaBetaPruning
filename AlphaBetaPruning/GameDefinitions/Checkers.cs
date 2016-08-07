@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Action = AlphaBetaPruning.Shared.Action;
 
-namespace AlphaBetaPruning
+namespace AlphaBetaPruning.GameDefinitions
 {
     class Checkers : Game
     {

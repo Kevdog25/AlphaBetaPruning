@@ -1,5 +1,5 @@
 ﻿
-namespace AlphaBetaPruning
+namespace AlphaBetaPruning.GameDefinitions
 {
     interface IGameState
     {

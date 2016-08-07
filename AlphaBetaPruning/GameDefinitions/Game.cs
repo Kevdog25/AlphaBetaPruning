@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AlphaBetaPruning
+using Action = AlphaBetaPruning.Shared.Action;
+
+namespace AlphaBetaPruning.GameDefinitions
 {
     abstract class Game
     {
-
         /// <summary>
         /// Returns a game state that represents the initial state for the game.
         /// </summary>

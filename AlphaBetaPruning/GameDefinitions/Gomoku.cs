@@ -4,7 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AlphaBetaPruning
+using AlphaBetaPruning.Shared;
+using Action = AlphaBetaPruning.Shared.Action;
+
+namespace AlphaBetaPruning.GameDefinitions
 {
     class Gomoku : Game
     {
