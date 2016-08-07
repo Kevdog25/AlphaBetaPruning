@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using AlphaBetaPruning.AILearner;
+using AlphaBetaPruning.Shared;
+using Action = AlphaBetaPruning.Shared.Action;
+using AlphaBetaPruning.GameDefinitions;
 
 namespace AlphaBetaPruning.AIDriver
 {

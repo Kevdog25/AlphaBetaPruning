@@ -3,6 +3,10 @@ using System.Diagnostics;
 using System.IO;
 using AlphaBetaPruning.AILearner;
 using AlphaBetaPruning.AIDriver;
+
+using AlphaBetaPruning.GameDefinitions;
+using Action = AlphaBetaPruning.Shared.Action;
+
 namespace AlphaBetaPruning
 {
     class Program
@@ -64,23 +68,40 @@ namespace AlphaBetaPruning
             return prof;
         }
 
+        static float ProfileMoveTime(Game game, IDecisionDriver ai, int nGames = 20)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int nMoves = 0;
+            for(var i = 0; i < nGames; i++)
+            {
+                IGameState state = game.NewGame();
+                while (!game.TerminalStateCheck(state))
+                {
+                    state = ai.FindBestMove(state).Act(state);
+                    nMoves++;
+                }
+            }
+            sw.Stop();
+
+            return (float)sw.ElapsedMilliseconds / (nMoves * 1000);
+        }
+
         static void Main(string[] args)
         {
             // Setup the AI
             Game game = new Connect4();
             Minimax mmAI = new Minimax(game,4);
-            Minimax nmAI = new Minimax(game,4);
+            Negamax nmAI = new Negamax(game,4);
             //string connect4FP = "..\\..\\Ignored\\Connect4DB.txt";
             //DecisionTree decisionTree = new Connect4DecisionTree(connect4FP);
             //mmAI.SetLearner(decisionTree);
 
             // Test the AIs
-            int nGames = 20;
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            Console.WriteLine(PlayoutGames(game, nGames, mmAI, nmAI,false));
-            Console.WriteLine(string.Format("Time taken per game: {0}s", (float)sw.Elapsed.Milliseconds / nGames / 1000));
-            sw.Stop();
+            int nGames = 100;
+            //Console.WriteLine(PlayoutGames(game, nGames, mmAI, nmAI,true));
+            Console.WriteLine(string.Format("Time per move: {0}", ProfileMoveTime(game, mmAI,nGames)));
+            Console.WriteLine(string.Format("Time per move: {0}", ProfileMoveTime(game, nmAI, nGames)));
             //decisionTree.ResolveBuffer();
             //decisionTree.SaveToDatabase(connect4FP);
         }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AlphaBetaPruning
+namespace AlphaBetaPruning.GameDefinitions
 {
     class GameSpecificationException : Exception
     {

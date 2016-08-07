@@ -1,6 +1,7 @@
 ﻿using System;
+using AlphaBetaPruning.GameDefinitions;
 
-namespace AlphaBetaPruning
+namespace AlphaBetaPruning.Shared
 {
     [Serializable]
     abstract class Action: IComparable<Action>, IEquatable<Action>
