@@ -202,6 +202,8 @@ namespace AlphaBetaPruning.AILearner
         /// <param name="testV"></param>
         private void PullUp(ref Node root, int testD, int testV)
         {
+            if (root.TestValue == testV && root.TestDimension == testD)
+                return;
             if (root.IsLeaf)
                 root.Split(testD, testV);
             else
