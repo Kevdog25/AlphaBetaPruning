@@ -13,6 +13,8 @@ namespace AlphaBetaPruning.Shared
         #endregion
 
         #region Properties
+        public int NUnique { get; private set; }
+
         public int NElements { get; private set; }
 
         public bool IsDirty { get; private set; }
@@ -41,6 +43,7 @@ namespace AlphaBetaPruning.Shared
                     float p = (float)pair.Value / NElements;
                     s -= p * Utils.Log2(p);
                 }
+                IsDirty = false;
                 return s;
             }
         }
@@ -77,9 +80,7 @@ namespace AlphaBetaPruning.Shared
         public void Add(Distribution<T> other)
         {
             foreach (KeyValuePair<T, int> pair in other.Dist)
-            {
                 Add(pair.Key, pair.Value);
-            }
         }
 
         public KeyValuePair<T,int>[] ToArray()
@@ -94,6 +95,30 @@ namespace AlphaBetaPruning.Shared
 
             return arr;
         }
+
+        public bool Contains(T item)
+        {
+            return Dist.ContainsKey(item);
+        }
+
+        public T RemoveAny()
+        {
+            IsDirty = true;
+            T key = Dist.Keys.First();
+            int count = Dist[key];
+            count--;
+
+            if (count == 0)
+            {
+                Dist.Remove(key);
+                NUnique--;
+            }
+            else
+                Dist[key] = count;
+
+            NElements--;
+            return key;
+        }
         #endregion
 
         #region Private Methods
@@ -104,7 +129,11 @@ namespace AlphaBetaPruning.Shared
             if (Dist.TryGetValue(e, out count))
                 Dist[e] = count + inc;
             else
+            {
                 Dist.Add(e, inc);
+                NUnique++;
+            }
+            NElements += inc;
         }
         #endregion
     }
