@@ -1,0 +1,9 @@
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\bin\Debug\ARTPrototype.exe.config
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\bin\Debug\ARTPrototype.exe
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\bin\Debug\ARTPrototype.pdb
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\obj\Debug\ARTPrototype.csprojResolveAssemblyReference.cache
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\obj\Debug\ARTPrototype.Properties.Resources.resources
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\obj\Debug\ARTPrototype.csproj.GenerateResource.Cache
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\obj\Debug\ARTPrototype.exe
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\obj\Debug\ARTPrototype.pdb
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\ARTPrototype\obj\Debug\ARTPrototype.Form1.resources

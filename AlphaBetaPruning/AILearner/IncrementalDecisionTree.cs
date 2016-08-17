@@ -9,6 +9,10 @@ using AlphaBetaPruning.Shared;
 using AlphaBetaPruning.GameDefinitions;
 using Action = AlphaBetaPruning.Shared.Action;
 
+/// <summary>
+/// IN CONSTRUCTION
+/// -K
+/// </summary>
 namespace AlphaBetaPruning.AILearner
 {
     abstract class IncrementalDecisionTree : DecisionTree, ILearner

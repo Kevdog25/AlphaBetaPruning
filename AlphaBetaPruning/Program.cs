@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using AlphaBetaPruning.AILearner;
 using AlphaBetaPruning.AIDriver;
+using AlphaBetaPruning.AIHeurisitc;
 
 using AlphaBetaPruning.GameDefinitions;
 using Action = AlphaBetaPruning.Shared.Action;
@@ -11,7 +13,7 @@ namespace AlphaBetaPruning
 {
     class Program
     {
-
+        static ARTTree<Connect4ART> ARTHeuristic;
         struct Profile
         {
             public float WinRate1;
@@ -39,6 +41,7 @@ namespace AlphaBetaPruning
             for (int i = 0; i < nGames; i++)
             {
                 IGameState state = game.NewGame();
+                List<Action> transcript = new List<Action>();
                 bool p1ToPlay = true;
                 while (!game.TerminalStateCheck(state))
                 {
@@ -48,11 +51,20 @@ namespace AlphaBetaPruning
                     else
                         move = AI2.FindBestMove(state);
 
+                    transcript.Add(move);
+
                     state = move.Act(state);
                     if (verbose)
                         Console.WriteLine(state.ToString());
                     p1ToPlay = !p1ToPlay;
                 }
+
+                int winner;
+                if (p1ToPlay)
+                    winner = (int)Connect4.Player.Black;
+                else
+                    winner = (int)Connect4.Player.Red;
+                ARTHeuristic.Learn(game.NewGame(), transcript, winner);
 
                 if (p1ToPlay != (i % 2 == 0))
                     p1Won++;
@@ -89,19 +101,24 @@ namespace AlphaBetaPruning
 
         static void Main(string[] args)
         {
+            ARTHeuristic = new ARTTree<Connect4ART>(new List<float>() {0.2f,0.3f,0.4f,0.5f});
+            ARTTree<Connect4ART> randomOne = new ARTTree<Connect4ART>(new List<float>() { 0 });
+
             // Setup the AI
             Game game = new Connect4();
-            Minimax mmAI = new Minimax(game,4);
-            Negamax nmAI = new Negamax(game,4);
+            NegaScout mmAI = new NegaScout(game, 1f, randomOne, maxDepth: 2);
+            NegaScout nsAI = new NegaScout(game, 1f, ARTHeuristic, maxDepth : 2);
             //string connect4FP = "..\\..\\Ignored\\Connect4DB.txt";
             //DecisionTree decisionTree = new Connect4DecisionTree(connect4FP);
             //mmAI.SetLearner(decisionTree);
 
             // Test the AIs
-            int nGames = 100;
-            //Console.WriteLine(PlayoutGames(game, nGames, mmAI, nmAI,true));
-            Console.WriteLine(string.Format("Time per move: {0}", ProfileMoveTime(game, mmAI,nGames)));
-            Console.WriteLine(string.Format("Time per move: {0}", ProfileMoveTime(game, nmAI, nGames)));
+            int nGames = 200;
+            ARTHeuristic.Load("ARTDB.txt");
+            Console.WriteLine(PlayoutGames(game, nGames, mmAI, nsAI,true));
+            ARTHeuristic.Save("ARTDB.txt");
+            //Console.WriteLine(string.Format("Time per move: {0}", ProfileMoveTime(game, mmAI,nGames)));
+            //Console.WriteLine(string.Format("Time per move: {0}", ProfileMoveTime(game, nsAI, nGames)));
             //decisionTree.ResolveBuffer();
             //decisionTree.SaveToDatabase(connect4FP);
         }

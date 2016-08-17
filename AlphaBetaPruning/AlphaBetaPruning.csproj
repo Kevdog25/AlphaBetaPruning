@@ -43,6 +43,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AIDriver\NegaScout.cs" />
+    <Compile Include="AIHeurisitc\ART.cs" />
+    <Compile Include="AIHeurisitc\ARTTree.cs" />
+    <Compile Include="AIHeurisitc\Connect4ART.cs" />
+    <Compile Include="AIHeurisitc\IARTDefinition.cs" />
     <Compile Include="AIHeurisitc\IHeuristicBuilder.cs" />
     <Compile Include="AILearner\DecisionTree.cs" />
     <Compile Include="Shared\Action.cs" />
@@ -70,6 +75,7 @@
     <Compile Include="GameDefinitions\TicTacToe.cs" />
     <Compile Include="Shared\Distribution.cs" />
     <Compile Include="Shared\Utils.cs" />
+    <Compile Include="Shared\VectorN.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
