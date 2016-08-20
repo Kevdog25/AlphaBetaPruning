@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlphaBetaPruning", "AlphaBe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARTPrototype", "ARTPrototype\ARTPrototype.csproj", "{FC63F12D-1AED-41F2-A55A-C74B9308E0FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeuralNet", "NeuralNet\NeuralNet.csproj", "{EB59D978-BD63-4BD4-B1F5-438D69B3D247}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{FC63F12D-1AED-41F2-A55A-C74B9308E0FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC63F12D-1AED-41F2-A55A-C74B9308E0FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC63F12D-1AED-41F2-A55A-C74B9308E0FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB59D978-BD63-4BD4-B1F5-438D69B3D247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB59D978-BD63-4BD4-B1F5-438D69B3D247}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB59D978-BD63-4BD4-B1F5-438D69B3D247}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB59D978-BD63-4BD4-B1F5-438D69B3D247}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
