@@ -4,3 +4,5 @@ C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\NeuralNet\
 C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\NeuralNet\obj\Debug\NeuralNet.csprojResolveAssemblyReference.cache
 C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\NeuralNet\obj\Debug\NeuralNet.exe
 C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\NeuralNet\obj\Debug\NeuralNet.pdb
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\NeuralNet\bin\Debug\MathNet.Numerics.dll
+C:\Users\kevin\Documents\Visual Studio 2015\Projects\AlphaBetaPruning\NeuralNet\bin\Debug\MathNet.Numerics.xml

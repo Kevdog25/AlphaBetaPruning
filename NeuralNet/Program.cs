@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace NeuralNet
 {
@@ -13,15 +15,15 @@ namespace NeuralNet
     {
         static Random random = new Random();
 
-        static int IndexOfMax(Matrix vector)
+        static int IndexOfMax(Matrix<double> vector)
         {
             double max = 0;
             int m = 0;
-            for (var i = 0; i < vector.Rows; i++)
+            for (var i = 0; i < vector.RowCount; i++)
             {
-                if (vector[i] > max)
+                if (vector[i, 0] > max)
                 {
-                    max = vector[i];
+                    max = vector[i, 0];
                     m = i;
                 }
             }
@@ -31,10 +33,10 @@ namespace NeuralNet
         static NeuralNet TrainNet()
         {
 
-            Matrix[] trainingData = new Matrix[6000];
-            Matrix[] trainingAnswers = new Matrix[6000];
-            Matrix[] testData = new Matrix[1000];
-            Matrix[] testAnswers = new Matrix[1000];
+            Matrix<double>[] trainingData = new Matrix<double>[60000];
+            Matrix<double>[] trainingAnswers = new Matrix<double>[60000];
+            Matrix<double>[] testData = new Matrix<double>[10000];
+            Matrix<double>[] testAnswers = new Matrix<double>[10000];
 
             Console.WriteLine("Loading training data...");
             using (StreamReader trainingIn = new StreamReader("mnist_train.csv"))
@@ -43,11 +45,11 @@ namespace NeuralNet
                 while (!trainingIn.EndOfStream && n < trainingData.Length)
                 {
                     string[] line = trainingIn.ReadLine().Split(',');
-                    trainingAnswers[n] = new Matrix(10);
-                    trainingAnswers[n][int.Parse(line[0])] = 1;
-                    trainingData[n] = new Matrix(784);
+                    trainingAnswers[n] = new DenseMatrix(10,1);
+                    trainingAnswers[n][int.Parse(line[0]),0] = 1;
+                    trainingData[n] = new DenseMatrix(784,1);
                     for (var i = 0; i < 784; i++)
-                        trainingData[n][i] = double.Parse(line[i]) / 255;
+                        trainingData[n][i,0] = double.Parse(line[i]) / 255;
                     n++;
                 }
             }
@@ -57,11 +59,11 @@ namespace NeuralNet
                 while (!testIn.EndOfStream && n < testData.Length)
                 {
                     string[] line = testIn.ReadLine().Split(',');
-                    testAnswers[n] = new Matrix(10);
-                    testAnswers[n][int.Parse(line[0])] = 1;
-                    testData[n] = new Matrix(784);
+                    testAnswers[n] = new DenseMatrix(10,1);
+                    testAnswers[n][int.Parse(line[0]),0] = 1;
+                    testData[n] = new DenseMatrix(784,1);
                     for (var i = 0; i < 784; i++)
-                        testData[n][i] = double.Parse(line[i]) / 255;
+                        testData[n][i,0] = double.Parse(line[i]) / 255;
                     n++;
                 }
             }
@@ -76,51 +78,6 @@ namespace NeuralNet
             return network;
         }
 
-        static void TestMatrices()
-        {
-            Matrix m1 = new Matrix(4);
-            m1.SetData(1,0,0,1);
-            Matrix m2 = new Matrix(4);
-            m2.SetData(1, 1, 1, 1);
-            m2.Transpose();
-            Console.WriteLine(m1*m2);
-        }
-
-        static void TestNetSimple()
-        {
-            Matrix[] trainingData = new Matrix[60000];
-            Matrix[] trainingAnswers = new Matrix[60000];
-            Matrix[] testData = new Matrix[1000];
-            Matrix[] testAnswers = new Matrix[1000];
-
-            for(var i = 0; i < trainingData.Length; i++)
-            {
-                Matrix data = new Matrix(4);
-                for (var m = 0; m < data.Rows; m++)
-                    data[m] = random.NextDouble();
-                Matrix answer = new Matrix(4);
-                answer[IndexOfMax(data)] = 1;
-                trainingData[i] = data;
-                trainingAnswers[i] = answer;
-            }
-
-            for (var i = 0; i < testData.Length; i++)
-            {
-                Matrix data = new Matrix(4);
-                for (var m = 0; m < data.Rows; m++)
-                    data[m] = random.NextDouble();
-                Matrix answer = new Matrix(4);
-                answer[IndexOfMax(data)] = 1;
-                testData[i] = data;
-                testAnswers[i] = answer;
-            }
-
-            Console.WriteLine("Training and testing data loaded");
-            int[] arch = new int[] { 4, 4 };
-            NeuralNet network = new NeuralNet(arch);
-            network.Learn(trainingData, trainingAnswers, testData, testAnswers);
-        }
-
         static void Main(string[] args)
         {
             NeuralNet network;
@@ -133,19 +90,19 @@ namespace NeuralNet
             else
                 network = NeuralNet.Load("networkState.txt");
 
-            Matrix[] testData = new Matrix[10000];
-            Matrix[] testAnswers = new Matrix[10000];
+            Matrix<double>[] testData = new Matrix<double>[10000];
+            Matrix<double>[] testAnswers = new Matrix<double>[10000];
             using (StreamReader testIn = new StreamReader("mnist_test.csv"))
             {
                 int n = 0;
                 while (!testIn.EndOfStream && n < testData.Length)
                 {
                     string[] line = testIn.ReadLine().Split(',');
-                    testAnswers[n] = new Matrix(10);
-                    testAnswers[n][int.Parse(line[0])] = 1;
-                    testData[n] = new Matrix(784);
+                    testAnswers[n] = new DenseMatrix(10,1);
+                    testAnswers[n][int.Parse(line[0]),0] = 1;
+                    testData[n] = new DenseMatrix(784,1);
                     for (var i = 0; i < 784; i++)
-                        testData[n][i] = double.Parse(line[i]) / 255;
+                        testData[n][i,0] = double.Parse(line[i]) / 255;
                     n++;
                 }
             }

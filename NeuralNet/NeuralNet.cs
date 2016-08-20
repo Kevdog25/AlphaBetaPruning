@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Double;
 
 namespace NeuralNet
 {
@@ -47,11 +48,11 @@ namespace NeuralNet
                 BatchSize = batchSize;
             }
         }
-
-        Matrix[] Weights;
-        Matrix[] Biases;
-        Matrix[][] OutputCache;
-        Matrix[][] InputCache;
+        
+        Matrix<double>[] Weights;
+        Matrix<double>[] Biases;
+        Matrix<double>[][] OutputCache;
+        Matrix<double>[][] InputCache;
         int Depth;
         public HyperParameters Parameters;
         public List<double> ClassificationPercent;
@@ -59,26 +60,25 @@ namespace NeuralNet
 
         public NeuralNet(int[] dimensions,HyperParameters hyperParameters = null)
         {
-
-            Parameters = hyperParameters;
+                Parameters = hyperParameters;
             if (Parameters == null)
                 Parameters = new HyperParameters();
 
             ClassificationPercent = new List<double>();
             Cost = new List<double>();
             Depth = dimensions.Length-1;
-            Weights = new Matrix[Depth];
-            Biases = new Matrix[Depth];
+            Weights = new Matrix<double>[Depth];
+            Biases = new Matrix<double>[Depth];
             for (var i = 0; i < Depth; i++)
             {
-                Weights[i] = new Matrix(dimensions[i + 1], dimensions[i]);
-                Biases[i] = new Matrix(dimensions[i + 1]);
+                Weights[i] = new DenseMatrix(dimensions[i + 1], dimensions[i]);
+                Biases[i] = new DenseMatrix(dimensions[i + 1],1);
             }
 
             Initialize();
         }
 
-        public void Learn(Matrix[] trainingData,Matrix[] trainingAnswers, Matrix[] testingData,Matrix[] testingAnswers)
+        public void Learn(Matrix<double>[] trainingData,Matrix<double>[] trainingAnswers, Matrix<double>[] testingData,Matrix<double>[] testingAnswers)
         {
             int batchSize = Parameters.BatchSize;
             batchSize = Math.Min(trainingData.Length, batchSize);
@@ -89,8 +89,8 @@ namespace NeuralNet
 
             while (!ShouldCut())
             {
-                Matrix[] inputs = new Matrix[batchSize];
-                Matrix[] answers = new Matrix[batchSize];
+                Matrix<double>[] inputs = new Matrix<double>[batchSize];
+                Matrix<double>[] answers = new Matrix<double>[batchSize];
                 double cost = 0;
                 int nBatches = trainingData.Length / batchSize;
                 Console.WriteLine();
@@ -104,7 +104,7 @@ namespace NeuralNet
                         answers[i] = trainingAnswers[index];
                     }
 
-                    Matrix[] outputs = FeedForward(inputs);
+                    Matrix<double>[] outputs = FeedForward(inputs);
                     BackPropogate(answers, outputs);
                     for (var k = 0; k < inputs.Length; k++)
                         cost += MeanSquare(answers[k], outputs[k]);
@@ -125,9 +125,9 @@ namespace NeuralNet
         /// <param name="testData"></param>
         /// <param name="testAnswers"></param>
         /// <returns></returns>
-        public double Test(Matrix[] testData, int[] testAnswers)
+        public double Test(Matrix<double>[] testData, int[] testAnswers)
         {
-            Matrix[] o = new Matrix[testData.Length];
+            Matrix<double>[] o = new Matrix<double>[testData.Length];
             for (var i = 0; i < testData.Length; i++)
                 o[i] = Process(testData[i]);
 
@@ -141,7 +141,7 @@ namespace NeuralNet
             return (double)correct / testAnswers.Length;
         }
 
-        public Matrix Process(Matrix x)
+        public Matrix<double> Process(Matrix<double> x)
         {
             for (var l = 0; l < Depth; l++)
                 x = Sigmoid(Weights[l] * x);
@@ -154,16 +154,16 @@ namespace NeuralNet
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
-        private Matrix[] FeedForward(Matrix[] x)
+        private Matrix<double>[] FeedForward(Matrix<double>[] x)
         {
-            InputCache = new Matrix[x.Length][];
-            OutputCache = new Matrix[x.Length][];
-            Matrix[] result = new Matrix[x.Length];
+            InputCache = new Matrix<double>[x.Length][];
+            OutputCache = new Matrix<double>[x.Length][];
+            Matrix<double>[] result = new Matrix<double>[x.Length];
 
             for(var t = 0; t < x.Length; t++)
             {
-                InputCache[t] = new Matrix[Weights.Length];
-                OutputCache[t] = new Matrix[Weights.Length];
+                InputCache[t] = new Matrix<double>[Weights.Length];
+                OutputCache[t] = new Matrix<double>[Weights.Length];
                 result[t] = x[t];
                 for (var i = 0; i < Depth; i++)
                 {
@@ -175,29 +175,27 @@ namespace NeuralNet
             return result;
         }
 
-        private void BackPropogate(Matrix[] expectedOutput, Matrix[] output)
+        private void BackPropogate(Matrix<double>[] expectedOutput, Matrix<double>[] output)
         {
             // Set up a place to store the partial derivatives
             // The values will be averaged over all of the expected outputs given
-            Matrix[] gradient = new Matrix[Weights.Length];
-            Matrix[] biasGradient = new Matrix[Weights.Length];
+            Matrix<double>[] gradient = new Matrix<double>[Weights.Length];
+            Matrix<double>[] biasGradient = new Matrix<double>[Weights.Length];
             for (var i = 0; i < Weights.Length; i++)
             {
-                gradient[i] = new Matrix(Weights[i].Rows, Weights[i].Cols);
-                biasGradient[i] = new Matrix(Biases[i].Rows);
+                gradient[i] = new DenseMatrix(Weights[i].RowCount, Weights[i].ColumnCount);
+                biasGradient[i] = new DenseMatrix(Biases[i].RowCount,1);
             }
             int batchSize = expectedOutput.Length;
 
             for (var i = 0; i < batchSize; i++)
             {
                 // Get the derivate of the cost function WRT the inputs into the final layer
-                Matrix delta = Matrix.Hadmard(MeanSquarePrime(expectedOutput[i], output[i]),SigmoidPrime(InputCache[i][Depth-1]));
-                Matrix layerOutput = OutputCache[i][Depth - 1];
+                Matrix<double> delta = MeanSquarePrime(expectedOutput[i], output[i]).PointwiseMultiply(SigmoidPrime(InputCache[i][Depth-1]));
+                Matrix<double> layerOutput = OutputCache[i][Depth - 1];
 
                 // Find the derivates WRT the weights transitioning from L-1 -> L
-                layerOutput.Transpose();
-                Matrix partials = delta * layerOutput;
-                layerOutput.Transpose();
+                Matrix<double> partials = delta * layerOutput.Transpose();
                 gradient[Depth - 1] += partials;
 
                 // Update the bias gradient
@@ -206,16 +204,12 @@ namespace NeuralNet
                 // Propogate the derivatives back to earlier weights
                 for (var l = Depth - 2; l >= 0; l--)
                 {
-                    Matrix transitionWeights = Weights[l + 1];
+                    Matrix<double> transitionWeights = Weights[l + 1];
                     // Get the derivates of the cost function WRT the inputs into layer l
-                    transitionWeights.Transpose();
-                    delta = Matrix.Hadmard(transitionWeights * delta, SigmoidPrime(InputCache[i][l]));
-                    transitionWeights.Transpose();
+                    delta = (transitionWeights.Transpose() * delta).PointwiseMultiply(SigmoidPrime(InputCache[i][l]));
 
                     layerOutput = OutputCache[i][l];
-                    layerOutput.Transpose();
-                    partials = delta * layerOutput;
-                    layerOutput.Transpose();
+                    partials = delta * layerOutput.Transpose();
 
                     gradient[l] += partials;
                     biasGradient[l] += delta;
@@ -228,9 +222,6 @@ namespace NeuralNet
                 Weights[i] -= (Parameters.LearningRate/batchSize) * gradient[i];
                 Biases[i] -= (Parameters.LearningRate / batchSize) * biasGradient[i];
             }
-
-            // Check to see how it did
-            Matrix diff = Process(OutputCache[0][0]) - output[0];
         }
 
         private bool ShouldCut()
@@ -253,27 +244,27 @@ namespace NeuralNet
 
         private void Initialize()
         {
-            double sigma = Math.Sqrt(Weights[0].Cols);
+            double sigma = Math.Sqrt(Weights[0].ColumnCount);
             for (var i = 0; i < Weights.Length; i++)
             {
-                for (var m = 0; m < Weights[i].Rows; m++)
+                for (var m = 0; m < Weights[i].RowCount; m++)
                 {
-                    for (var n = 0; n < Weights[i].Cols; n++)
+                    for (var n = 0; n < Weights[i].ColumnCount; n++)
                         Weights[i][m, n] = KMath.RandGauss(0, sigma);
-                    Biases[i][m] = KMath.RandGauss(0, 1);
+                    Biases[i][m,0] = KMath.RandGauss(0, 1);
                 }
             }
         }
 
-        private int IndexOfMax(Matrix vector)
+        private int IndexOfMax(Matrix<double> vector)
         {
             double max = 0;
             int m = 0;
-            for(var i = 0; i < vector.Rows; i++)
+            for(var i = 0; i < vector.RowCount; i++)
             {
-                if(vector[i] > max)
+                if(vector[i,0] > max)
                 {
-                    max = vector[i];
+                    max = vector[i,0];
                     m = i;
                 }
             }
@@ -281,19 +272,19 @@ namespace NeuralNet
         }
 
         #region Function Definitions
-        private double MeanSquare(Matrix expected, Matrix output)
+        private double MeanSquare(Matrix<double> expected, Matrix<double> output)
         {
             double v = 0;
-            for (var i = 0; i < expected.Rows; i++)
-                v += (expected[i] - output[i]) * (expected[i] - output[i]);
-            return v / expected.Rows;
+            for (var i = 0; i < expected.RowCount; i++)
+                v += (expected[i,0] - output[i,0]) * (expected[i,0] - output[i,0]);
+            return v / expected.RowCount;
         }
 
-        private Matrix MeanSquarePrime(Matrix e, Matrix o)
+        private Matrix<double> MeanSquarePrime(Matrix<double> e, Matrix<double> o)
         {
-            Matrix val = new Matrix(e.Rows);
-            for (var i = 0; i < e.Rows; i++)
-                val[i] = MeanSquarePrime(e[i], o[i]);
+            Matrix<double> val = new DenseMatrix(e.RowCount,1);
+            for (var i = 0; i < e.RowCount; i++)
+                val[i,0] = MeanSquarePrime(e[i,0], o[i,0]);
             return val;
         }
 
@@ -302,11 +293,11 @@ namespace NeuralNet
             return (o - e);
         }
 
-        private Matrix Sigmoid(Matrix x)
+        private Matrix<double> Sigmoid(Matrix<double> x)
         {
-            Matrix val = new Matrix(x.Rows);
-            for (var i = 0; i < x.Rows; i++)
-                val[i] = Sigmoid(x[i]);
+            Matrix<double> val = new DenseMatrix(x.RowCount,1);
+            for (var i = 0; i < x.RowCount; i++)
+                val[i,0] = Sigmoid(x[i,0]);
             return val;
         }
 
@@ -315,11 +306,11 @@ namespace NeuralNet
             return 1.0 / (1.0 + Math.Exp(-x));
         }
 
-        private Matrix SigmoidPrime(Matrix x)
+        private Matrix<double> SigmoidPrime(Matrix<double> x)
         {
-            Matrix val = new Matrix(x.Rows);
-            for (var i = 0; i < x.Rows; i++)
-                val[i] = SigmoidPrime(x[i]);
+            Matrix<double> val = new DenseMatrix(x.RowCount,1);
+            for (var i = 0; i < x.RowCount; i++)
+                val[i,0] = SigmoidPrime(x[i,0]);
             return val;
         }
 
