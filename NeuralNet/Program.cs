@@ -39,7 +39,7 @@ namespace NeuralNet
             Matrix<double>[] testAnswers = new Matrix<double>[10000];
 
             Console.WriteLine("Loading training data...");
-            using (StreamReader trainingIn = new StreamReader("mnist_train.csv"))
+            using (StreamReader trainingIn = new StreamReader("..\\..\\..\\Ignored\\mnist_train.csv"))
             {
                 int n = 0;
                 while (!trainingIn.EndOfStream && n < trainingData.Length)
@@ -53,7 +53,7 @@ namespace NeuralNet
                     n++;
                 }
             }
-            using (StreamReader testIn = new StreamReader("mnist_test.csv"))
+            using (StreamReader testIn = new StreamReader("..\\..\\..\\Ignored\\mnist_test.csv"))
             {
                 int n = 0;
                 while (!testIn.EndOfStream && n < testData.Length)
@@ -69,8 +69,7 @@ namespace NeuralNet
             }
             Console.WriteLine("Training and testing data loaded");
 
-
-            NeuralNet.HyperParameters hp = new NeuralNet.HyperParameters(batchSize : 10);
+            NeuralNet.HyperParameters hp = new NeuralNet.HyperParameters(batchSize : 10, regMode: NeuralNet.HyperParameters.RegularizationMode.None);
             int[] arch = new int[] { 784, 30, 10 };
             NeuralNet network = new NeuralNet(arch, hp);
             network.Learn(trainingData, trainingAnswers, testData, testAnswers);
@@ -90,19 +89,27 @@ namespace NeuralNet
             else
                 network = NeuralNet.Load("networkState.txt");
 
+            Console.WriteLine("Would you like to test it by hand (Y/N)?");
+            string resp = Console.ReadLine();
+            if (resp.ToUpper().Equals("Y"))
+                HumanTest(network);
+        }
+
+        static void HumanTest(NeuralNet network)
+        {
             Matrix<double>[] testData = new Matrix<double>[10000];
             Matrix<double>[] testAnswers = new Matrix<double>[10000];
-            using (StreamReader testIn = new StreamReader("mnist_test.csv"))
+            using (StreamReader testIn = new StreamReader("..\\..\\..\\Ignored\\mnist_test.csv"))
             {
                 int n = 0;
                 while (!testIn.EndOfStream && n < testData.Length)
                 {
                     string[] line = testIn.ReadLine().Split(',');
-                    testAnswers[n] = new DenseMatrix(10,1);
-                    testAnswers[n][int.Parse(line[0]),0] = 1;
-                    testData[n] = new DenseMatrix(784,1);
+                    testAnswers[n] = new DenseMatrix(10, 1);
+                    testAnswers[n][int.Parse(line[0]), 0] = 1;
+                    testData[n] = new DenseMatrix(784, 1);
                     for (var i = 0; i < 784; i++)
-                        testData[n][i,0] = double.Parse(line[i]) / 255;
+                        testData[n][i, 0] = double.Parse(line[i]) / 255;
                     n++;
                 }
             }
