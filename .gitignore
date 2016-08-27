@@ -48,3 +48,5 @@ Temporary Items
 
 # Data files that are potentially large
 ./Ignored/
+Ignored/mnist_test.csv
+Ignored/mnist_train.csv

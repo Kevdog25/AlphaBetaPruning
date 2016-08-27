@@ -40,8 +40,8 @@ namespace NeuralNet
             TrainingData[] testData;
 
             Console.WriteLine("Loading training data...");
-            LoadMnist(out trainingData, "..\\..\\..\\Ignored\\mnist_train.csv", 6000);
-            LoadMnist(out testData, "..\\..\\..\\Ignored\\mnist_test.csv", 1000);
+            LoadMnist(out trainingData, "..\\..\\..\\Ignored\\mnist_train.csv", 60000);
+            LoadMnist(out testData, "..\\..\\..\\Ignored\\mnist_test.csv", 10000);
             Console.WriteLine("Training and testing data loaded");
 
             NeuralNet.HyperParameters hp = new NeuralNet.HyperParameters(batchSize : 10, regMode: NeuralNet.HyperParameters.RegularizationMode.None, regularizationWeight : 0.001);

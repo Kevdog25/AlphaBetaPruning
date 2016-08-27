@@ -188,10 +188,10 @@ namespace NeuralNet
                     {
                         int index = random.Next(trainingData.Length);
 
-                        Vector<double> output = FeedForward(trainingData[i].Data);
-                        BackPropogate(trainingData[i].GetLabelVector(), output);
+                        Vector<double> output = FeedForward(trainingData[index].Data);
+                        BackPropogate(trainingData[index].GetLabelVector(), output);
 
-                        cost += CostFunction.Of(trainingData[i].GetLabelVector(), output);
+                        cost += CostFunction.Of(trainingData[index].GetLabelVector(), output);
                     }
 
 
