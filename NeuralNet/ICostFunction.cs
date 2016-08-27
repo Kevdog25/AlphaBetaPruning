@@ -10,9 +10,9 @@ namespace NeuralNet
 {
     interface ICostFunction
     {
-        Matrix<double> Of(Matrix<double> expected, Matrix<double> actual);
+        double Of(Vector<double> expected, Vector<double> actual);
         double Of(double expected, double actual);
-        Matrix<double> Derivative(Matrix<double> expected, Matrix<double> actual);
+        Vector<double> Derivative(Vector<double> expected, Vector<double> actual);
         double Derivative(double expected, double actual);
     }
 }

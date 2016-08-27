@@ -48,8 +48,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IActivationFunction.cs" />
     <Compile Include="ICostFunction.cs" />
     <Compile Include="KMath.cs" />
+    <Compile Include="TrainingData.cs" />
     <Compile Include="NeuralNet.cs" />
     <Compile Include="NeuralNetException.cs" />
     <Compile Include="Program.cs" />

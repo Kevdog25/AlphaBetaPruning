@@ -15,64 +15,39 @@ namespace NeuralNet
     {
         static Random random = new Random();
 
-        static int IndexOfMax(Matrix<double> vector)
+        static void LoadMnist(out TrainingData[] data, string fp, int nDataPoints)
         {
-            double max = 0;
-            int m = 0;
-            for (var i = 0; i < vector.RowCount; i++)
+            data = new TrainingData[nDataPoints];
+            using (StreamReader trainingIn = new StreamReader(fp))
             {
-                if (vector[i, 0] > max)
+                int n = 0;
+                while (!trainingIn.EndOfStream && n < data.Length)
                 {
-                    max = vector[i, 0];
-                    m = i;
+                    string[] line = trainingIn.ReadLine().Split(',');
+                    data[n] = new TrainingData(784, 10);
+                    data[n].IntLabel = int.Parse(line[0]);
+                    for (var i = 1; i <= 784; i++)
+                        data[n].Data[i-1] = double.Parse(line[i]) / 255;
+                    n++;
                 }
             }
-            return m;
         }
 
         static NeuralNet TrainNet()
         {
 
-            Matrix<double>[] trainingData = new Matrix<double>[60000];
-            Matrix<double>[] trainingAnswers = new Matrix<double>[60000];
-            Matrix<double>[] testData = new Matrix<double>[10000];
-            Matrix<double>[] testAnswers = new Matrix<double>[10000];
+            TrainingData[] trainingData;
+            TrainingData[] testData;
 
             Console.WriteLine("Loading training data...");
-            using (StreamReader trainingIn = new StreamReader("..\\..\\..\\Ignored\\mnist_train.csv"))
-            {
-                int n = 0;
-                while (!trainingIn.EndOfStream && n < trainingData.Length)
-                {
-                    string[] line = trainingIn.ReadLine().Split(',');
-                    trainingAnswers[n] = new DenseMatrix(10,1);
-                    trainingAnswers[n][int.Parse(line[0]),0] = 1;
-                    trainingData[n] = new DenseMatrix(784,1);
-                    for (var i = 0; i < 784; i++)
-                        trainingData[n][i,0] = double.Parse(line[i]) / 255;
-                    n++;
-                }
-            }
-            using (StreamReader testIn = new StreamReader("..\\..\\..\\Ignored\\mnist_test.csv"))
-            {
-                int n = 0;
-                while (!testIn.EndOfStream && n < testData.Length)
-                {
-                    string[] line = testIn.ReadLine().Split(',');
-                    testAnswers[n] = new DenseMatrix(10,1);
-                    testAnswers[n][int.Parse(line[0]),0] = 1;
-                    testData[n] = new DenseMatrix(784,1);
-                    for (var i = 0; i < 784; i++)
-                        testData[n][i,0] = double.Parse(line[i]) / 255;
-                    n++;
-                }
-            }
+            LoadMnist(out trainingData, "..\\..\\..\\Ignored\\mnist_train.csv", 6000);
+            LoadMnist(out testData, "..\\..\\..\\Ignored\\mnist_test.csv", 1000);
             Console.WriteLine("Training and testing data loaded");
 
-            NeuralNet.HyperParameters hp = new NeuralNet.HyperParameters(batchSize : 10, regMode: NeuralNet.HyperParameters.RegularizationMode.None);
+            NeuralNet.HyperParameters hp = new NeuralNet.HyperParameters(batchSize : 10, regMode: NeuralNet.HyperParameters.RegularizationMode.None, regularizationWeight : 0.001);
             int[] arch = new int[] { 784, 30, 10 };
             NeuralNet network = new NeuralNet(arch, hp);
-            network.Learn(trainingData, trainingAnswers, testData, testAnswers);
+            network.Learn(trainingData,testData);
 
             return network;
         }
@@ -97,22 +72,8 @@ namespace NeuralNet
 
         static void HumanTest(NeuralNet network)
         {
-            Matrix<double>[] testData = new Matrix<double>[10000];
-            Matrix<double>[] testAnswers = new Matrix<double>[10000];
-            using (StreamReader testIn = new StreamReader("..\\..\\..\\Ignored\\mnist_test.csv"))
-            {
-                int n = 0;
-                while (!testIn.EndOfStream && n < testData.Length)
-                {
-                    string[] line = testIn.ReadLine().Split(',');
-                    testAnswers[n] = new DenseMatrix(10, 1);
-                    testAnswers[n][int.Parse(line[0]), 0] = 1;
-                    testData[n] = new DenseMatrix(784, 1);
-                    for (var i = 0; i < 784; i++)
-                        testData[n][i, 0] = double.Parse(line[i]) / 255;
-                    n++;
-                }
-            }
+            TrainingData[] testData;
+            LoadMnist(out testData, "..\\..\\..\\Ignored\\mnist_train.csv", 10000);
             string cont = "y";
             while (cont.Equals("y"))
             {
@@ -121,7 +82,7 @@ namespace NeuralNet
                 Console.ReadLine();
 
                 Console.WriteLine("The neural net guesses that this is a ");
-                Console.WriteLine(IndexOfMax(network.Process(testData[number])));
+                Console.WriteLine(network.Process(testData[number].Data).AbsoluteMaximumIndex());
                 Console.WriteLine("Would you like to try an other one?");
                 cont = Console.ReadLine();
             }

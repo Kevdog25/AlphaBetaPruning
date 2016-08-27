@@ -20,16 +20,17 @@ namespace NeuralNet
         public List<double> Cost;
         public static Random random = new Random(1);
         #endregion
-        #region Private Fields
+        #region Fields
         private delegate Matrix<double> RegularizationScheme(Matrix<double> w);
-        Matrix<double>[] Weights;
-        Matrix<double>[] Biases;
-        Matrix<double>[] weightGradients;
-        Matrix<double>[] biasGradients;
-        Matrix<double>[] OutputCache;
-        Matrix<double>[] InputCache;
-        RegularizationScheme Regularization;
-        ICostFunction CostFunction;
+        private Matrix<double>[] Weights;
+        private Vector<double>[] Biases;
+        private Matrix<double>[] weightGradients;
+        private Vector<double>[] biasGradients;
+        private Vector<double>[] OutputCache;
+        private Vector<double>[] InputCache;
+        private RegularizationScheme Regularization;
+        private ICostFunction CostFunction;
+        private IActivationFunction ActivationFunction;
         #endregion
         #region Classes
         [Serializable]
@@ -37,9 +38,11 @@ namespace NeuralNet
         {
             public enum RegularizationMode { L1, L2 , None};
             public enum CostFunction { MeanSquare, CrossEntropy };
+            public enum ActivationFunction { Sigmoid }
 
             public RegularizationMode Regularization;
             public CostFunction Cost;
+            public ActivationFunction ActFunction;
             public double LearningRate;
             public double RegularizationWeight;
             public int MaxEpochCutoff;
@@ -49,6 +52,7 @@ namespace NeuralNet
 
             public HyperParameters(RegularizationMode regMode = RegularizationMode.L2,
                 CostFunction costFunc = CostFunction.MeanSquare,
+                ActivationFunction actFunc = ActivationFunction.Sigmoid,
                 double learningRate = 3,
                 double regularizationWeight = .01,
                 int batchSize = 10,
@@ -64,6 +68,7 @@ namespace NeuralNet
                 EpochPercentCutoff = epochPercentCutoff;
                 EpochLookback = epochLookback;
                 BatchSize = batchSize;
+                ActFunction = actFunc;
             }
         }
         [Serializable]
@@ -74,7 +79,7 @@ namespace NeuralNet
                 return actual - expected;
             }
 
-            public Matrix<double> Derivative(Matrix<double> expected, Matrix<double> actual)
+            public Vector<double> Derivative(Vector<double> expected, Vector<double> actual)
             {
                 return actual - expected;
             }
@@ -84,10 +89,39 @@ namespace NeuralNet
                 return (expected - actual) * (expected - actual);
             }
 
-            public Matrix<double> Of(Matrix<double> expected, Matrix<double> actual)
+            public double Of(Vector<double> expected, Vector<double> actual)
             {
-                Matrix<double> diff = expected - actual;
-                return (diff.Transpose() * diff);
+                Vector<double> diff = expected - actual;
+                return (diff * diff);
+            }
+        }
+        [Serializable]
+        public class Sigmoid : IActivationFunction
+        {
+            public Vector<double> Derivative(Vector<double> input)
+            {
+                Vector<double> ret = new DenseVector(input.Count);
+                for (var i = 0; i < input.Count; i++)
+                    ret[i] = Derivative(input[i]);
+                return ret;
+            }
+
+            public Vector<double> Of(Vector<double> input)
+            {
+                Vector<double> ret = new DenseVector(input.Count);
+                for (var i = 0; i < input.Count; i++)
+                    ret[i] = Of(input[i]);
+                return ret;
+            }
+
+            private double Of(double x)
+            {
+                return 1.0 / (1.0 + Math.Exp(-x));
+            }
+            private double Derivative(double x)
+            {
+                double s = Of(x);
+                return s * (1 - s);
             }
         }
         #endregion
@@ -102,22 +136,22 @@ namespace NeuralNet
             Cost = new List<double>();
             Depth = dimensions.Length-1;
             Weights = new Matrix<double>[Depth];
-            Biases = new Matrix<double>[Depth];
+            Biases = new Vector<double>[Depth];
             weightGradients = new Matrix<double>[Depth];
-            biasGradients = new Matrix<double>[Depth];
-            OutputCache = new Matrix<double>[Depth];
-            InputCache = new Matrix<double>[Depth];
+            biasGradients = new Vector<double>[Depth];
+            OutputCache = new Vector<double>[Depth];
+            InputCache = new Vector<double>[Depth];
             for (var i = 0; i < Depth; i++)
             {
                 Weights[i] = new DenseMatrix(dimensions[i + 1], dimensions[i]);
-                Biases[i] = new DenseMatrix(dimensions[i + 1],1);
+                Biases[i] = new DenseVector(dimensions[i + 1]);
                 weightGradients[i] = new DenseMatrix(dimensions[i+1], dimensions[i]);
-                biasGradients[i] = new DenseMatrix(dimensions[i + 1], 1);
-                OutputCache[i] = new DenseMatrix(dimensions[i]);
-                InputCache[i] = new DenseMatrix(dimensions[i + 1]);
+                biasGradients[i] = new DenseVector(dimensions[i + 1]);
+                OutputCache[i] = new DenseVector(dimensions[i]);
+                InputCache[i] = new DenseVector(dimensions[i + 1]);
             }
 
-            SetDelegates();
+            SetParameters();
             Initialize();
         }
         #endregion
@@ -129,19 +163,13 @@ namespace NeuralNet
         /// <param name="trainingAnswers"></param>
         /// <param name="testingData"></param>
         /// <param name="testingAnswers"></param>
-        public void Learn(Matrix<double>[] trainingData,Matrix<double>[] trainingAnswers, Matrix<double>[] testingData,Matrix<double>[] testingAnswers)
+        public void Learn(TrainingData[] trainingData, TrainingData[] testingData = null)
         {
             int batchSize = Parameters.BatchSize;
             batchSize = Math.Min(trainingData.Length, batchSize);
 
-            int[] testClassifications = new int[trainingAnswers.Length];
-            for (var i = 0; i < trainingAnswers.Length; i++)
-                testClassifications[i] = IndexOfMax(trainingAnswers[i]);
-
             while (!ShouldCut())
             {
-                Matrix<double>[] inputs = new Matrix<double>[batchSize];
-                Matrix<double>[] answers = new Matrix<double>[batchSize];
                 double cost = 0;
                 int nBatches = trainingData.Length / batchSize;
                 Console.WriteLine();
@@ -159,13 +187,11 @@ namespace NeuralNet
                     for (var i = 0; i < batchSize; i++)
                     {
                         int index = random.Next(trainingData.Length);
-                        inputs[i] = trainingData[index];
-                        answers[i] = trainingAnswers[index];
 
-                        Matrix<double> output = FeedForward(inputs[i]);
-                        BackPropogate(answers[i], output);
+                        Vector<double> output = FeedForward(trainingData[i].Data);
+                        BackPropogate(trainingData[i].GetLabelVector(), output);
 
-                        cost += CostFunction.Of(answers[i], output)[0, 0];
+                        cost += CostFunction.Of(trainingData[i].GetLabelVector(), output);
                     }
 
 
@@ -180,9 +206,12 @@ namespace NeuralNet
                 cost /= batchSize * nBatches;
                 
                 Cost.Add(cost);
-                ClassificationPercent.Add(Test(trainingData, testClassifications));
-                Console.WriteLine();
-                Console.WriteLine("Correctness: " + ClassificationPercent[ClassificationPercent.Count - 1]);
+                if (testingData != null)
+                {
+                    ClassificationPercent.Add(Test(testingData));
+                    Console.WriteLine();
+                    Console.WriteLine("Correctness: " + ClassificationPercent[ClassificationPercent.Count - 1]);
+                }
             }
         }
         /// <summary>
@@ -222,25 +251,21 @@ namespace NeuralNet
         /// <param name="testData"></param>
         /// <param name="testAnswers"></param>
         /// <returns></returns>
-        public double Test(Matrix<double>[] testData, int[] testAnswers)
+        public double Test(TrainingData[] testData)
         {
-            Matrix<double>[] o = new Matrix<double>[testData.Length];
-            for (var i = 0; i < testData.Length; i++)
-                o[i] = Process(testData[i]);
-
             int correct = 0;
-            for(var i = 0; i < o.Length; i++)
+            for(var i = 0; i < testData.Length; i++)
             {
-                if (testAnswers[i] == IndexOfMax(o[i]))
+                if (testData[i].GetLabelVector().AbsoluteMaximumIndex() == Process(testData[i].Data).AbsoluteMaximumIndex())
                     correct++;
             }
             
-            return (double)correct / testAnswers.Length;
+            return (double)correct / testData.Length;
         }
-        public Matrix<double> Process(Matrix<double> x)
+        public Vector<double> Process(Vector<double> x)
         {
             for (var l = 0; l < Depth; l++)
-                x = Sigmoid(Weights[l] * x);
+                x = ActivationFunction.Of(Weights[l] * x);
             return x;
         }
         #endregion
@@ -251,24 +276,23 @@ namespace NeuralNet
         /// </summary>
         /// <param name="x"></param>
         /// <returns></returns>
-        private Matrix<double> FeedForward(Matrix<double> x)
+        private Vector<double> FeedForward(Vector<double> x)
         {
             for (var i = 0; i < Depth; i++)
             {
                 OutputCache[i] = x;
                 InputCache[i] = Weights[i] * x + Biases[i];
-                x = Sigmoid(InputCache[i]);
+                x = ActivationFunction.Of(InputCache[i]);
             }
             return x;
         }
-        private void BackPropogate(Matrix<double> expectedOutput, Matrix<double> output)
+        private void BackPropogate(Vector<double> expectedOutput, Vector<double> output)
         {
             // Get the derivate of the cost function WRT the inputs into the final layer
-            Matrix<double> delta = CostFunction.Derivative(expectedOutput, output).PointwiseMultiply(SigmoidPrime(InputCache[Depth-1]));
+            Vector<double> delta = CostFunction.Derivative(expectedOutput, output).PointwiseMultiply(ActivationFunction.Derivative(InputCache[Depth-1]));
 
             // Find the derivates WRT the weights transitioning from L-1 -> L
-            Matrix<double> partials = delta * OutputCache[Depth-1].Transpose();
-            weightGradients[Depth - 1] += partials;
+            weightGradients[Depth - 1] += delta.OuterProduct(OutputCache[Depth-1]);
 
             // Update the bias gradient
             biasGradients[Depth - 1] += delta;
@@ -278,11 +302,9 @@ namespace NeuralNet
             {
                 Matrix<double> transitionWeights = Weights[l + 1];
                 // Get the derivates of the cost function WRT the inputs into layer l
-                delta = (transitionWeights.Transpose() * delta).PointwiseMultiply(SigmoidPrime(InputCache[l]));
-                
-                partials = delta * OutputCache[l].Transpose();
+                delta = (transitionWeights.Transpose() * delta).PointwiseMultiply(ActivationFunction.Derivative(InputCache[l]));
 
-                weightGradients[l] += partials;
+                weightGradients[l] += delta.OuterProduct(OutputCache[l]);
                 biasGradients[l] += delta;
             }
         }
@@ -328,11 +350,11 @@ namespace NeuralNet
                 {
                     for (var n = 0; n < Weights[i].ColumnCount; n++)
                         Weights[i][m, n] = KMath.RandGauss(0, sigma);
-                    Biases[i][m,0] = KMath.RandGauss(0, 1);
+                    Biases[i][m] = KMath.RandGauss(0, 1);
                 }
             }
         }
-        private void SetDelegates()
+        private void SetParameters()
         {
             switch (Parameters.Regularization)
             {
@@ -358,49 +380,15 @@ namespace NeuralNet
                     throw new NeuralNetException("Unsupported Cost Function Choice: " + Parameters.Cost);
             }
 
-        }
-        private int IndexOfMax(Matrix<double> vector)
-        {
-            double max = 0;
-            int m = 0;
-            for(var i = 0; i < vector.RowCount; i++)
+            switch (Parameters.ActFunction)
             {
-                if(vector[i,0] > max)
-                {
-                    max = vector[i,0];
-                    m = i;
-                }
+                case HyperParameters.ActivationFunction.Sigmoid:
+                    ActivationFunction = new Sigmoid();
+                    break;
+                default:
+                    throw new NeuralNetException("Unsupported Activation Function Choice: " + Parameters.ActFunction);
             }
-            return m;
-        }
-        #endregion
-        #region Function Definitions
-        private Matrix<double> Sigmoid(Matrix<double> x)
-        {
-            Matrix<double> val = new DenseMatrix(x.RowCount,1);
-            for (var i = 0; i < x.RowCount; i++)
-                val[i,0] = Sigmoid(x[i,0]);
-            return val;
-        }
 
-        private double Sigmoid(double x)
-        {
-            double v = 1.0 / (1.0 + Math.Exp(-x));
-            return v;
-        }
-
-        private Matrix<double> SigmoidPrime(Matrix<double> x)
-        {
-            Matrix<double> val = new DenseMatrix(x.RowCount,1);
-            for (var i = 0; i < x.RowCount; i++)
-                val[i,0] = SigmoidPrime(x[i,0]);
-            return val;
-        }
-
-        private double SigmoidPrime(double x)
-        {
-            double s = 1.0 / (1.0 + Math.Exp(-x));
-            return s * (1 - s);
         }
         #endregion
     }
